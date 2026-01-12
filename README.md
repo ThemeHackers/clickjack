@@ -1,4 +1,4 @@
-# 🚨 ClickJacking Vulnerability Scanner (Golang Edition) 🚨
+# 🚨 ClickJacking Vulnerability Scanner (Golang Edition) 
 
 Refactored and supercharged version of the ClickJacking Scanner, now written in **Golang**. Fast, concurrent, and packed with advanced detection logic.
 
