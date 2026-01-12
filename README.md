@@ -1,61 +1,95 @@
-# 🚨 ClickJacking Vulnerability Scanner 🚨
+# 🚨 ClickJacking Vulnerability Scanner (Golang Edition) 🚨
 
-- This **Python-based** tool automates the detection of ClickJacking vulnerabilities by scanning a list of targets provided in a file.
-- For each vulnerable target found, it generates an Exploit Proof of Concept (PoC) in the form of an HTML file.
-- The tool is **completely working** and has been thoroughly **tested** for reliability and accuracy.
+Refactored and supercharged version of the ClickJacking Scanner, now written in **Golang**. Fast, concurrent, and packed with advanced detection logic.
 
-## What is ClickJacking? 🤔
-- ClickJacking (also known as User Interface redress attack, UI redress attack, or UI redressing) is a malicious technique where a web user is tricked into clicking on something different from what they perceive, potentially revealing confidential information or taking control of their computer while interacting with seemingly harmless web pages.
-- A server that doesn’t return an `X-Frame-Options header` is vulnerable to ClickJacking attacks. The `X-Frame-Options` HTTP response header is used to indicate whether a browser should be allowed to render a page within a `<frame> or <iframe>`.
-- Websites can prevent ClickJacking attacks by using the `X-Frame-Options` header to ensure their content isn’t embedded in other sites.
+## ⚡ Key Updates
+- **🚀 Pure Golang:** Compiled into a single, portable binary. No Python dependencies.
+- **⚡ Concurrency:** Scans hundreds of targets in seconds using Goroutines.
+- **🛡️ Advanced Detection:** Checks not just for headers, but also for **Content-Security-Policy (CSP)** logic and **Frame Busting** JavaScript patterns.
+- **🔍 CSP Analyzer:** Built-in analyzer to inspect and color-code CSP headers for security flaws (`-csp-analyzer`).
+- **🥷 Stealth Mode:** Randomized User-Agents and Jitter delay to evade WAF/IPS (`-stealth`).
+- **📊 JSON Output:** Machine-readable output for easy integration (`-json`).
+- **🕹️ Vulnerable Lab:** Includes a Docker-based **Vulnerable App** with a realistic "Reward Center" theme for testing.
 
-[Learn more on OWASP](https://owasp.org/www-community/attacks/Clickjacking)
+## 🛠️ Installation & Build
 
-## ⚡ Features
-- **🎯 Target-Based Scanning:** Automatically scans all targets listed in the provided file.
-- **🛠️ Exploit PoC Generation:** Creates an HTML-based Proof of Concept (PoC) file for each vulnerable target, saved as TargetName.html.
-- **✅ Comprehensive Reporting:** Clearly identifies and prints "Not Vulnerable" for targets that are secure.
-- **🚀 Multithreading for Speed:** Leverages multithreading to perform rapid vulnerability scanning.
-- **🔔 Slack Integration:** Sends real-time Slack alerts with attached PoC files for each vulnerable target.
-- **📁 Organized Results:** Stores all generated PoC files in a dedicated results folder, each named after the corresponding target.
-- **🔧 Robust Error Handling:** Includes detailed logging and error management to ensure smooth operation and easy troubleshooting.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Raiders0786/ClickjackPoc.git
+   cd ClickjackPoc
+   ```
 
-## Installation:
-````
-git clone https://github.com/Raiders0786/ClickjackPoc.git
-cd ClickjackPoc
-pip install -r requirements.txt
-````
+2. **Build the binary:**
+   ```bash
+   go build -o clickjack
+   ```
 
-## Example:
-Example Usage of the Tool
-````
-python3 clickJackPoc.py -f domains.txt
-````
+## 💻 Usage
 
-![1](usage.png)
+```bash
+./clickjack -h
+```
 
-## 🎯 Allowed Targets Format:
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-t` | Single target URL | |
+| `-f` | File containing list of domains | |
+| `-c` | Number of concurrent threads | `20` |
+| `-o` | Output file path | |
+| `-csp-analyzer` | Analyze CSP headers (requires `-t`) | `false` |
+| `-stealth` | Enable Stealth Mode (Random UA, Jitter) | `false` |
+| `-json` | Output results in JSON format | `false` |
+| `-proxy` | Proxy URL (e.g., `http://127.0.0.1:8080`) | |
+| `-timeout` | Request timeout in seconds | `10` |
+| `-ua` | Custom User-Agent | `RedTeam-Clickjack-Scanner/1.0` |
 
-````
-http://target.com
-target.com
-www.target.com
-https://target.com/
-https://IP:Port
-IP:Port
-http://IP:Port/login
-http://www.target.com/directory
-https://www.target.com/directory
-````
+### Examples
 
-## 🌟 Reach Me:
+**1. Scan a Single Target:**
+```bash
+./clickjack -t "http://target.com"
+```
 
-- **💬 Tag Me** if you get rewarded 💸💰—I’d love to hear about your success! 😄
-- If you find this tool useful, please give it a **Star** ⭐ and **Follow** me for more cool projects!
-- Feel free to reach out if you have any suggestions or want to collaborate.
-- **⚠️ Note**: This tool is intended for **learning purposes** only.
+**2. Red Team Stealth Scan (JSON Output):**
+```bash
+./clickjack -f domains.txt -stealth -json -o results.json
+```
 
+**3. Analyze CSP Headers:**
+```bash
+./clickjack -t "https://github.com" -csp-analyzer
+```
 
-<a href="https://www.linkedin.com/in/chirag-agrawal-770488144/" target="_blank"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="Linkedin" style="height: 50px !important;width: 170px !important;" ></a>
-<img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/__Raiders?style=social" width="250" height="50">
+**4. Scan with Proxy (e.g., Burp Suite):**
+```bash
+./clickjack -t "http://target.com" -proxy "http://127.0.0.1:8080"
+```
+
+## 🧪 Testing with Vulnerable App
+
+We provide a **Vulnerable App** to test the scanner. It simulates a "Prize Claim" page vulnerable to Clickjacking.
+
+1. **Start the App:**
+   ```bash
+   cd vulnerable_app
+   docker build -t vulnerable-app .
+   docker run -d -p 8080:80 vulnerable-app
+   ```
+
+2. **Access the App:** 
+   Open `http://localhost:8080` in your browser.
+
+3. **Scan it:**
+   ```bash
+   ./clickjack -t "http://localhost:8080"
+   ```
+   *Result: Should be detected as Vulnerable.*
+
+## 📝 Output Explanation
+
+- **[+] Vulnerable:** No `X-Frame-Options` or `Content-Security-Policy` (frame-ancestors) found.
+- **[?] Potentially Vulnerable:** Headers are missing, but **Frame Busting JavaScript** was detected. This might be bypassable.
+- **[Secure]:** Proper headers are present.
+
+---
+**Disclaimer:** This tool is for educational and security testing purposes only. Use responsibly.
